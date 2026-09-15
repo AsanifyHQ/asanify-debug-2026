@@ -18,8 +18,8 @@ def slip(payslip_id, company_id, name, joined_on="2026-01-01T00:00:00", basic="5
 
 
 @pytest.fixture
-def two_companies():
-    """ACME has two employees this month. GLOBEX has one. Same period."""
+def january():
+    """Three payslips in the January run. Two tenants use this system."""
     return PayslipStore([
         slip("ps-1", "acme", "Riya"),
         slip("ps-2", "acme", "Arjun"),

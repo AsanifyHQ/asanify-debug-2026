@@ -1,6 +1,8 @@
-"""The four cases support has raised this month.
+"""Four tickets support raised this month.
 
-Each one is a real bug report. None of them tells you where the defect is.
+Each docstring is the report as it came in. Each test is what the reporter
+expected to see. Neither tells you which line is at fault -- that part is the
+job.
 """
 
 from decimal import Decimal
@@ -12,48 +14,53 @@ from payroll.service import run_summary
 from payroll.store import PayslipStore
 
 
-def test_summary_of_a_run_with_no_payslips():
-    """A company opens the report before anyone has been paid.
+def test_report_before_the_first_payroll():
+    """TICKET 4471, from an admin at a company that onboarded last week:
 
-    Reported as: "the page 500s for our new entity".
+    "I clicked into the January report and the page just died. We have not run
+    payroll yet, so maybe that is why, but it should not break."
     """
-    empty = PayslipStore([])
-
-    summary = run_summary(empty, "acme", "JAN-2026", 2026, 1)
+    summary = run_summary(PayslipStore([]), "acme", "JAN-2026", 2026, 1)
 
     assert summary["headcount"] == 0
     assert summary["total_gross"] == Decimal("0.00")
     assert summary["highest_gross"] == Decimal("0.00")
 
 
-def test_summary_covers_only_the_requesting_company(two_companies):
-    """ACME's admin opens the January report.
+def test_january_report_for_acme(january):
+    """TICKET 4488, from ACME's payroll admin:
 
-    Reported as: "our headcount is wrong and I don't recognise the total".
+    "Our January report says we have more people on it than we employ, and the
+    total does not match what we approved. We have two employees this month."
     """
-    summary = run_summary(two_companies, "acme", "JAN-2026", 2026, 1)
+    summary = run_summary(january, "acme", "JAN-2026", 2026, 1)
 
     assert summary["headcount"] == 2
     assert summary["total_gross"] == Decimal("100000.00")
 
 
-def test_employee_who_joined_mid_month_is_prorated():
-    """The importer sends this employee's joining date with a +05:30 offset.
+def test_report_with_an_imported_joining_date():
+    """TICKET 4502, from support, after an employee import:
 
-    Reported as: "payroll won't finish for the January batch".
+    "January will not finish for this customer at all. It falls over every time.
+    The only thing unusual is one employee who joined on the 16th and came in
+    through the importer."
+
+    That importer sends joining dates with a +05:30 offset on them.
     """
     period_start, period_end = period_bounds(2026, 1)
 
-    worked = days_worked("2026-01-16T00:00:00+05:30", period_start, period_end)
-
-    assert worked == 16
+    assert days_worked("2026-01-16T00:00:00+05:30", period_start, period_end) == 16
 
 
-def test_payslip_total_is_rounded_once():
-    """Statutory rule: components are carried at full precision and the
-    payslip total is rounded to the nearest paisa exactly once.
+def test_january_register_totals():
+    """TICKET 4515, from finance:
 
-    Reported as: "our total is a few paise off the register every month".
+    "Every month we are a few paise away from the register. It is small but it
+    never nets out, and at our headcount it adds up."
+
+    Finance's rule, for reference: components are carried at full precision and
+    the payslip total is rounded to the nearest paisa exactly once.
     """
     components = [Component(code=f"C{i}", amount=Decimal("12500.004")) for i in range(4)]
 

@@ -1,6 +1,6 @@
 # Asanify · Jadavpur University 2026 · Section 1
 
-**35 minutes · 60% of your engineering score**
+**35 minutes · 40% of your engineering score**
 
 ---
 

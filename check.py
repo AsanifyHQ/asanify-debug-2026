@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""No-install fallback. Same four checks as the test suite, stdlib only.
+"""No-install fallback. The same four tickets as the test suite, stdlib only.
 
     python3 check.py
 
 Use this if `pip install` will not work on your machine or your network.
 It is not a substitute for reading tests/test_payroll.py -- the tests carry the
-bug reports and the expected values. This just tells you which ones pass.
+reports themselves, which is where the useful detail is. This just tells you
+which of the four currently pass.
 """
 
 from decimal import Decimal
@@ -22,7 +23,7 @@ def check(name, fn):
         RESULTS.append((name, None))
 
 
-def one_empty_run():
+def ticket_4471():
     from payroll.service import run_summary
     from payroll.store import PayslipStore
     s = run_summary(PayslipStore([]), "acme", "JAN-2026", 2026, 1)
@@ -31,7 +32,7 @@ def one_empty_run():
     assert s["highest_gross"] == Decimal("0.00"), s
 
 
-def two_company_scoped():
+def ticket_4488():
     from payroll.models import Component, Payslip
     from payroll.service import run_summary
     from payroll.store import PayslipStore
@@ -46,14 +47,14 @@ def two_company_scoped():
     assert s["total_gross"] == Decimal("100000.00"), s
 
 
-def three_offset_joining_date():
+def ticket_4502():
     from payroll.periods import days_worked, period_bounds
     start, end = period_bounds(2026, 1)
     got = days_worked("2026-01-16T00:00:00+05:30", start, end)
     assert got == 16, got
 
 
-def four_rounded_once():
+def ticket_4515():
     from payroll.models import Component
     from payroll.money import total_earnings
     items = [Component(code=f"C{i}", amount=Decimal("12500.004")) for i in range(4)]
@@ -62,10 +63,10 @@ def four_rounded_once():
 
 
 if __name__ == "__main__":
-    check("1  summary of a run with no payslips", one_empty_run)
-    check("2  summary covers only the requesting company", two_company_scoped)
-    check("3  employee who joined mid-month is prorated", three_offset_joining_date)
-    check("4  payslip total is rounded once", four_rounded_once)
+    check("TICKET 4471  report before the first payroll", ticket_4471)
+    check("TICKET 4488  January report for ACME", ticket_4488)
+    check("TICKET 4502  report with an imported joining date", ticket_4502)
+    check("TICKET 4515  January register totals", ticket_4515)
 
     width = max(len(n) for n, _ in RESULTS)
     failed = 0
